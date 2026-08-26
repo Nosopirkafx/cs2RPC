@@ -1,10 +1,18 @@
 # FACEIT Discord Rich Presence for CS2
 
+![License](https://img.shields.io/github/license/Nosopirkafx/cs2RPC)
+![Latest Release](https://img.shields.io/github/v/release/Nosopirkafx/cs2RPC)
+![Go](https://img.shields.io/github/go-mod/go-version/Nosopirkafx/cs2RPC?filename=backend/go.mod)
+
 Shows your live FACEIT CS2 match — map, ELO, score and elapsed time — in your
 Discord Rich Presence. Fully out-of-process: a browser extension reads the
 public FACEIT match page DOM and forwards a JSON snapshot to a local Go daemon,
 which talks to Discord over IPC. **No memory reading, no process injection, no
 OCR** — 100% isolated from FACEIT Anti-Cheat.
+
+## Screenshot
+
+![Discord Rich Presence](docs/rpc-discord.png)
 
 ## Features
 
