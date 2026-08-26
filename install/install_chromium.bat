@@ -1,37 +1,28 @@
-:: FACEIT Discord RPC - Chromium guide EN/RU
+:: FACEIT Discord RPC - Chromium install guide (EN/RU)
 @echo off
 chcp 65001 >nul
-title FACEIT Discord RPC - Chromium guide
+title FACEIT Discord RPC - Chromium
 echo.
-echo ==============================================================
-echo   FACEIT Discord RPC  -  Chromium  -  EN / RU
-echo ==============================================================
+echo ===== FACEIT Discord RPC - Chromium =====
 echo.
-echo [EN] Steps:
-echo   1. Build the daemon if bin\faceit-rpc.exe is missing:
-echo        cd backend
-echo        go build -ldflags="-s -w" -trimpath -o ..\bin\faceit-rpc.exe .
-echo   2. Run bin\faceit-rpc.exe and keep its window open.
-echo   3. Open in your browser:  chrome://extensions
-echo   4. Turn on Developer mode, switch at top-right.
-echo   5. Click Load unpacked and select folder:  extensions\chromium
-echo   6. Click the puzzle icon and pin FACEIT Discord RPC.
-echo   7. Open a FACEIT match room, presence appears in Discord.
-echo   8. In the popup, enter your FACEIT nickname and click Save.
+echo [EN]
+echo 1. Run start_daemon.bat and keep its window open.
+echo 2. Open:  chrome://extensions
+echo 3. Enable Developer mode - top-right switch.
+echo 4. Click "Load unpacked" and select folder:  extensions\chromium
+echo 5. Click the puzzle icon and pin "FACEIT Discord RPC".
+echo 6. Open a FACEIT match room. In the popup enter your
+echo    FACEIT nickname and click Save. Presence shows in Discord.
 echo.
- echo RU: Шаги:
- echo   1. Собери демон, если отсутствует bin\faceit-rpc.exe:
- echo        cd backend
- echo        go build -ldflags="-s -w" -trimpath -o ..\bin\faceit-rpc.exe .
- echo   2. Запусти bin\faceit-rpc.exe и держи окно открытым.
- echo   3. Открой в браузере:  chrome://extensions
- echo   4. Включи Режим разработчика, переключатель справа сверху.
- echo   5. Нажми Load unpacked и выбери папку:  extensions\chromium
- echo   6. Нажми иконку пазла и закрепи FACEIT Discord RPC.
- echo   7. Открой матч-руму FACEIT, статус появится в Discord.
- echo   8. В попапе введи свой FACEIT-ник и нажми Save.
- echo.
- echo Discord Developer Portal: загрузи картинки с ключами  cs2  и  faciet
- echo Полное руководство: install\README.md
- echo.
- pause
+echo [RU]
+echo 1. Запусти start_daemon.bat и держи окно открытым.
+echo 2. Открой:  chrome://extensions
+echo 3. Включи Режим разработчика - переключатель справа сверху.
+echo 4. Нажми "Load unpacked" и выбери папку:  extensions\chromium
+echo 5. Нажми иконку пазла и закрепи "FACEIT Discord RPC".
+echo 6. Открой матч-руму FACEIT. В попапе введи свой
+echo    FACEIT-ник и нажми Save. Статус появится в Discord.
+echo.
+echo Full guide: README.md
+echo.
+pause
