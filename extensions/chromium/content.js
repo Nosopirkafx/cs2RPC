@@ -7,21 +7,17 @@
     if (c.nickname) myNick = (c.nickname.newValue || "").trim();
   });
 
-  let port = null;
-  let lastState = null;
-
-  function connect() {
-    port = chrome.runtime.connect({ name: "statefeed" });
-    port.onDisconnect.addListener(() => {
-      port = null;
-      setTimeout(connect, 1000);
-    });
-    if (lastState) port.postMessage({ type: "state", state: lastState });
-  }
-  connect();
-
   let last = "";
+  let lastState = null;
   let matchStart = null;
+
+  function sendState(s) {
+    try {
+      chrome.runtime.sendMessage({ type: "state", state: s });
+    } catch (e) {
+      // extension context temporarily unavailable; ignore
+    }
+  }
 
   function pick(selectors) {
     for (const sel of selectors) {
@@ -159,7 +155,7 @@
       last = key;
       lastState = s;
       console.log("[faceit-rpc] state", s);
-      if (port) port.postMessage({ type: "state", state: s });
+      sendState(s);
     }
   }
 
@@ -167,10 +163,10 @@
   tick();
 
   setInterval(() => {
-    if (port && lastState) port.postMessage({ type: "state", state: lastState });
-  }, 20000);
+    if (lastState) sendState(lastState);
+  }, 15000);
 
   window.addEventListener("beforeunload", () => {
-    if (port) port.postMessage({ type: "state", state: { status: "idle" } });
+    sendState({ status: "idle" });
   });
 })();

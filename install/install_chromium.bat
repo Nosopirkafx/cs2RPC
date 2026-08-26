@@ -1,48 +1,22 @@
 @echo off
-setlocal
-cd /d "%~dp0\.."
-title FACEIT Discord RPC - Chromium installer
-
+title FACEIT Discord RPC - Chromium setup guide
 echo.
 echo ===================================================
-echo   FACEIT Discord RPC  -  Chromium installer
+echo   FACEIT Discord RPC  -  Chromium setup guide
 echo ===================================================
-echo Builds/runs the daemon and loads the extension.
 echo.
-
-if exist "bin\faceit-rpc.exe" (
-  echo [+] Daemon found: bin\faceit-rpc.exe
-) else (
-  where go >nul 2>nul
-  if not errorlevel 1 (
-    echo [*] Go found - building daemon...
-    pushd backend
-    go build -ldflags="-s -w" -trimpath -o ..\bin\faceit-rpc.exe .
-    popd
-    if exist "bin\faceit-rpc.exe" (echo [+] Build OK) else (echo [!] Build failed)
-  ) else (
-    echo [!] Go not installed. Place a ready bin\faceit-rpc.exe or install Go.
-  )
-)
-
-if exist "bin\faceit-rpc.exe" (
-  echo [*] Starting daemon...
-  start "" "bin\faceit-rpc.exe"
-) else (
-  echo [!] Daemon missing - presence will not work until you run it.
-)
-
-set "EXT=%cd%\extensions\chromium"
-echo [*] Loading extension into Chromium...
-start "" chrome.exe --load-extension="%EXT%"
-
+echo EN: open the extensions page, enable "Developer mode",
+echo     click "Load unpacked" and select: extensions\chromium
+echo     Enter your FACEIT nickname in the popup (Save).
+echo     Full step-by-step (EN / RU) is in install\README.md.
 echo.
-echo ===================================================
-echo The extension is now loaded. To keep it visible, click
-echo the puzzle icon and pin "FACEIT Discord RPC".
-echo (Pinning persists across restarts.)
+echo RU: otkroj stranicu rasshirenij, vklyuchi "Rezhim razrabotchika",
+echo     nazhmi "Load unpacked" i vyberi papku: extensions\chromium
+echo     Vvedi svoj FACEIT-nik v popup (Save).
+echo     Podrobnyj guid (RU / EN) - v fajle install\README.md.
 echo.
-echo See install\README.md for full EN/RU instructions.
-echo ===================================================
+echo Opening the extensions page and the guide for you...
+start "" chrome.exe "chrome://extensions"
+start "" "install\README.md"
 echo.
 pause

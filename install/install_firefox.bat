@@ -1,49 +1,22 @@
 @echo off
-setlocal
-cd /d "%~dp0\.."
-title FACEIT Discord RPC - Firefox installer
-
+title FACEIT Discord RPC - Firefox setup guide
 echo.
 echo ===================================================
-echo   FACEIT Discord RPC  -  Firefox installer
+echo   FACEIT Discord RPC  -  Firefox setup guide
 echo ===================================================
-echo Builds/runs the daemon and opens the add-on debugger.
 echo.
-
-if exist "bin\faceit-rpc.exe" (
-  echo [+] Daemon found: bin\faceit-rpc.exe
-) else (
-  where go >nul 2>nul
-  if not errorlevel 1 (
-    echo [*] Go found - building daemon...
-    pushd backend
-    go build -ldflags="-s -w" -trimpath -o ..\bin\faceit-rpc.exe .
-    popd
-    if exist "bin\faceit-rpc.exe" (echo [+] Build OK) else (echo [!] Build failed)
-  ) else (
-    echo [!] Go not installed. Place a ready bin\faceit-rpc.exe or install Go.
-  )
-)
-
-if exist "bin\faceit-rpc.exe" (
-  echo [*] Starting daemon...
-  start "" "bin\faceit-rpc.exe"
-) else (
-  echo [!] Daemon missing - presence will not work until you run it.
-)
-
-set "EXT=%cd%\extensions\gecko"
-echo [*] Opening Firefox add-on debugger...
+echo EN: open about:debugging, click "Load Temporary Add-on",
+echo     select: extensions\gecko\manifest.json
+echo     Enter your FACEIT nickname in the popup (Save).
+echo     Full step-by-step (EN / RU) is in install\README.md.
+echo.
+echo RU: otkroj about:debugging, nazhmi "Load Temporary Add-on",
+echo     vyberi: extensions\gecko\manifest.json
+echo     Vvedi svoj FACEIT-nik v popup (Save).
+echo     Podrobnyj guid (RU / EN) - v fajle install\README.md.
+echo.
+echo Opening the add-on debugger and the guide for you...
 start "" firefox.exe "about:debugging#/runtime/this-firefox"
-
-echo.
-echo ===================================================
-echo In Firefox: click "Load Temporary Add-on" and choose:
-echo   extensions\gecko\manifest.json
-echo (Temporary add-ons reset after restart; re-load each
-echo  session, or sign via AMO for a permanent install.)
-echo.
-echo See install\README.md for full EN/RU instructions.
-echo ===================================================
+start "" "install\README.md"
 echo.
 pause

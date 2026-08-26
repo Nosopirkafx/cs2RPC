@@ -40,7 +40,8 @@ files if changed).
 
 ## Install the extension
 
-Quickest path — run the installer (builds the daemon, starts it, and loads the extension):
+Run the installer for your browser — it opens the correct extensions page and the
+EN/RU guide; you click "Load unpacked" / "Load Temporary Add-on" yourself:
 
 ```bat
 install\install_chromium.bat      # Chrome / Edge / Brave / Yandex
