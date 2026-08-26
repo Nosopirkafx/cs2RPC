@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FACEIT Discord RPC</title>
+    <style>
+      :root {
+        --bg: #0e0f13;
+        --card: #1a1c23;
+        --card2: #23262f;
+        --accent: #ff5500;
+        --text: #e8e9ec;
+        --muted: #8b8f99;
+        --green: #2ecc71;
+        --red: #e74c3c;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        width: 300px;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 14px;
+      }
+      h1 {
+        font-size: 15px;
+        margin: 0 0 2px;
+        letter-spacing: .3px;
+      }
+      h1 .accent { color: var(--accent); }
+      .sub { color: var(--muted); font-size: 11px; margin-bottom: 12px; }
+      .card {
+        background: var(--card);
+        border: 1px solid #2a2d36;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .row { display: flex; align-items: center; justify-content: space-between; }
+      .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+      .pill {
+        font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+      }
+      .pill.ok { background: rgba(46,204,113,.15); color: var(--green); }
+      .pill.bad { background: rgba(231,76,60,.15); color: var(--red); }
+      input {
+        width: 100%; margin-top: 6px; padding: 8px 10px; border-radius: 8px;
+        border: 1px solid #2a2d36; background: var(--card2); color: var(--text); font-size: 13px;
+      }
+      input:focus { outline: none; border-color: var(--accent); }
+      button {
+        margin-top: 8px; width: 100%; padding: 8px; border: 0; border-radius: 8px;
+        background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; font-size: 13px;
+      }
+      button:hover { filter: brightness(1.08); }
+      .hint { font-size: 11px; color: var(--green); margin-top: 6px; min-height: 14px; }
+      .stat { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+      .stat .k { color: var(--muted); }
+      .stat .v { font-weight: 600; }
+      .empty { color: var(--muted); font-size: 12px; text-align: center; padding: 6px 0; }
+      details { margin-top: 4px; }
+      summary { cursor: pointer; color: var(--muted); font-size: 11px; }
+      details p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+      code { background: var(--card2); padding: 1px 4px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1><span class="accent">FACEIT</span> Discord RPC</h1>
+    <div class="sub">CS2 Rich Presence for your matches</div>
+
+    <div class="card">
+      <div class="row">
+        <span class="label">Daemon</span>
+        <span id="status" class="pill bad">checking…</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Your FACEIT nickname</div>
+      <input id="nick" type="text" placeholder="e.g. lilpeepfan-" autocomplete="off" />
+      <button id="save">Save</button>
+      <div id="saved" class="hint"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Live match</div>
+      <div id="match">
+        <div class="empty">No active match detected</div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Help / Instructions (EN / RU)</summary>
+      <p>
+        <b>EN:</b> Run <code>bin/faceit-rpc.exe</code> (or use the install bat). Open a FACEIT
+        match room. The presence appears in Discord automatically. <br />
+        <b>RU:</b> Запусти <code>bin/faceit-rpc.exe</code> (или bat установки). Открой матч-руму
+        FACEIT — статус появится в Discord автоматически. <br />
+        Need the Discord assets <code>cs2</code> and <code>faciet</code> uploaded in the
+        Developer Portal.
+      </p>
+    </details>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
