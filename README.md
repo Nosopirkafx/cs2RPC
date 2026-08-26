@@ -92,7 +92,11 @@ Follow the [Build from source](#build-from-source) section, then run
 `extensions/chromium` (Chromium) or `extensions/gecko` (Firefox, after packing
 to `.xpi` with `make xpi`).
 
-### Russian
+## Русское руководство (установка)
+
+Показывает твой живой матч FACEIT CS2 (карта, ELO, счёт и таймер) в Discord
+Rich Presence. Без чтения памяти и процессов — 100% безопасно для FACEIT
+Anti-Cheat. Ниже — шаги установки и запуска на русском.
 
 **Способ А. Скачать готовый бандл (для обычных пользователей)**
 
