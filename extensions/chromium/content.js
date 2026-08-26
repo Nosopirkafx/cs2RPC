@@ -7,7 +7,18 @@
     if (c.nickname) myNick = (c.nickname.newValue || "").trim();
   });
 
-  const port = chrome.runtime.connect({ name: "statefeed" });
+  let port = null;
+  let lastState = null;
+
+  function connect() {
+    port = chrome.runtime.connect({ name: "statefeed" });
+    port.onDisconnect.addListener(() => {
+      port = null;
+      setTimeout(connect, 1000);
+    });
+    if (lastState) port.postMessage({ type: "state", state: lastState });
+  }
+  connect();
 
   let last = "";
   let matchStart = null;
@@ -146,15 +157,20 @@
     const key = JSON.stringify(s);
     if (key !== last) {
       last = key;
+      lastState = s;
       console.log("[faceit-rpc] state", s);
-      port.postMessage({ type: "state", state: s });
+      if (port) port.postMessage({ type: "state", state: s });
     }
   }
 
   setInterval(tick, 1000);
   tick();
 
+  setInterval(() => {
+    if (port && lastState) port.postMessage({ type: "state", state: lastState });
+  }, 20000);
+
   window.addEventListener("beforeunload", () => {
-    port.postMessage({ type: "state", state: { status: "idle" } });
+    if (port) port.postMessage({ type: "state", state: { status: "idle" } });
   });
 })();
