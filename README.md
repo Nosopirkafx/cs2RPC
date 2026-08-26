@@ -1,84 +1,154 @@
-# FACEIT Discord Rich Presence (CS2)
+# FACEIT Discord Rich Presence for CS2
 
-Shows your live FACEIT CS2 match (map, ELO, score, elapsed timer) in your Discord
-Rich Presence — fully out-of-process. No memory reading, no process handles, no OCR.
-100% isolated from FACEIT Anti-Cheat.
+Shows your live FACEIT CS2 match — map, ELO, score and elapsed time — in your
+Discord Rich Presence. Fully out-of-process: a browser extension reads the
+public FACEIT match page DOM and forwards a JSON snapshot to a local Go daemon,
+which talks to Discord over IPC. **No memory reading, no process injection, no
+OCR** — 100% isolated from FACEIT Anti-Cheat.
 
-## Architecture
+## Features
+
+- Live map, your ELO, team score and an elapsed-match timer in Discord.
+- Works on Chromium (Chrome / Edge / Brave / Yandex) and Gecko (Firefox / Zen).
+- Local-only: the daemon binds `127.0.0.1` and rejects non-loopback / non-extension requests.
+- Single-instance (a Windows mutex prevents double launches).
+- No background "phone home" — only talks to Discord and your own browser.
+
+## How it works
 
 ```
-FACEIT tab (DOM) ──content.js──▶ background (service worker) ──HTTP POST──▶ Go daemon ──IPC──▶ Discord
-                                (localhost only, 127.0.0.1:42157)
+FACEIT match page (DOM)
+   |  content.js reads map / ELO / score
+   v
+background.js  --HTTP POST-->  Go daemon (127.0.0.1:42157/api/state)
+                                   |  validates + keeps one Discord IPC connection
+                                   v
+                                Discord Rich Presence
 ```
 
-- **Browser extension** reads the public FACEIT match page DOM and forwards a JSON
-  snapshot to `http://127.0.0.1:42157/api/state`.
-- **Go daemon** (`faceit-rpc.exe`) validates the payload, keeps a single Discord IPC
-  connection with auto-reconnect, and renders the Rich Presence.
+- **Extension** (`extensions/chromium` + `extensions/gecko`) scrapes the public
+  FACEIT DOM and POSTs a snapshot to `http://127.0.0.1:42157/api/state`.
+- **Daemon** (`bin/faceit-rpc.exe`) validates the payload, maintains a single
+  Discord IPC connection with auto-reconnect, and renders the presence.
 
-## Discord Developer Portal setup
+## Discord Developer Portal (one-time)
 
-1. Go to https://discord.com/developers/applications and **New Application**.
-2. Copy the **Application ID** (already set in `backend/main.go` as `1540354848015388685`).
-3. **Rich Presence → Artwork Assets**: upload two images:
-   - key `cs2` — the CS2 game icon (Large image)
-   - key `faceit` — the FACEIT logo (Small image)
-4. No public listing / install required.
+1. Open https://discord.com/developers/applications and create a **New Application**.
+2. The **Application ID** is already set in `backend/main.go`
+   (`1540354848015388685`) — you normally don't need to change it.
+3. Go to **Rich Presence → Artwork Assets** and upload two images:
+   - key `cs2`   — the CS2 game icon (used as the **large** image)
+   - key `faciet` — the FACEIT logo (used as the **small** image)
+4. Keep the Discord desktop app running and signed in.
 
-## Build
+> The two asset keys must be exactly `cs2` and `faciet` (that is `faciet`, not `faceit`).
 
-Requires Go 1.22+ and (optionally) UPX.
+## Build from source
+
+Requires **Go 1.22+**. UPX is optional.
 
 ```bash
-make build     # -> bin/faceit-rpc.exe (~6 MB, console window for easy Ctrl+C close)
-make pack      # -> UPX-compressed (~3 MB, no console window)
-make run       # run from source for development
+make build     # build bin/faceit-rpc.exe
+make xpi       # build dist/faceit-rpc.xpi (Firefox/Zen extension)
+make dist      # build everything + dist/faceit-rpc-win.zip (user bundle)
+make run       # run the daemon from source (development)
 ```
 
-The port can be overridden with `CS2RPC_PORT` (must match `PORT` in the extension
-files if changed).
-
-## Install the extension
-
-Run the installer for your browser — it opens the correct extensions page and the
-EN/RU guide; you click "Load unpacked" / "Load Temporary Add-on" yourself:
+Or use the helper scripts directly:
 
 ```bat
-install\install_chromium.bat      # Chrome / Edge / Brave / Yandex
-install\install_firefox.bat       # Firefox / Zen
+install\pack_firefox.bat   # build the .xpi only
+install\pack_dist.bat      # build the full Windows bundle
 ```
 
-Full step-by-step (EN/RU) for both browsers: [install/README.md](install/README.md)
-and [docs/INSTALLATION.md](docs/INSTALLATION.md).
+The port can be overridden with the `CS2RPC_PORT` environment variable (must
+match the `PORT` constant in the extension if you change it).
 
-The extension popup shows the daemon status and a **live match panel** (Map / ELO / Score).
-Enter your FACEIT nickname in the popup (Save) so your own ELO is detected.
+## Installation
+
+### English
+
+**A. For users — download the bundle (recommended)**
+
+1. Go to **GitHub Releases** and download `faceit-rpc-win.zip`.
+2. Extract it.
+3. Double-click **`start_daemon.bat`** and keep its window open.
+4. Install the browser extension:
+   - **Chromium** (Chrome / Edge / Brave / Yandex): open `chrome://extensions`,
+     enable **Developer mode**, click **Load unpacked** and select the
+     `extensions/chromium` folder from the extracted archive.
+   - **Firefox / Zen**: open `about:config` and set
+     `xpinstall.signatures.required` to `false` (one time only). Then open
+     `about:addons` → gear menu → **Install Add-on From File** → choose
+     `faceit-rpc.xpi` from the archive.
+5. Click the toolbar icon, enter your **FACEIT nickname**, and press **Save**
+   (required so your own ELO is detected).
+6. Open a FACEIT match room — the presence appears in Discord within ~1 second.
+
+**B. For developers — build from source**
+
+Follow the [Build from source](#build-from-source) section, then run
+`bin/faceit-rpc.exe` (or `make run`) and load the extension from
+`extensions/chromium` (Chromium) or `extensions/gecko` (Firefox, after packing
+to `.xpi` with `make xpi`).
+
+### Russian
+
+**Способ А. Скачать готовый бандл (для обычных пользователей)**
+
+1. Перейди в GitHub Releases и скачай `faceit-rpc-win.zip`.
+2. Распакуй архив.
+3. Запусти `start_daemon.bat` (окно держи открытым).
+4. Установи расширение для браузера:
+   - Chromium (Chrome/Edge/Brave/Yandex): открой `chrome://extensions`, включи «Режим разработчика», нажми «Load unpacked» и выбери папку `extensions/chromium` из архива.
+   - Firefox / Zen: открой `about:config` и установи `xpinstall.signatures.required` = `false` (один раз). Затем открой `about:addons` -> меню-шестерёнка -> Install Add-on From File -> выбери `faceit-rpc.xpi` из архива.
+5. Нажми иконку на панели, введи свой FACEIT-никнейм и нажми Save (нужно для определения твоего ELO).
+6. Открой матч-руму FACEIT — статус появится в Discord через ~1 секунду.
+
+**Способ Б. Сборка из исходников**
+
+Требуется Go 1.22+. Полезные команды:
+- `make build` — собрать `bin/faceit-rpc.exe`.
+- `make xpi` — собрать `dist/faceit-rpc.xpi`.
+- `make dist` — собрать всё и упаковать бандл `dist/faceit-rpc-win.zip`.
+
+**Один раз: Discord Developer Portal**
+1. Открой https://discord.com/developers/applications -> New Application.
+2. Application ID уже прописан в `backend/main.go` (`1540354848015388685`).
+3. Rich Presence -> Artwork Assets: загрузи две картинки: ключ `cs2` (иконка CS2, большая) и ключ `faciet` (логотип FACEIT, маленькая). Внимание: ключ `faciet`, а не `faceit`.
+4. Держи десктоп-клиент Discord запущенным и авторизованным.
 
 ## Usage
 
-1. Launch `bin/faceit-rpc.exe` (runs in the background, logs to `cs2rpc.log` next to it).
-2. Install the extension for your browser (Chromium or Gecko).
-3. Open a FACEIT match room. Discord will show the live presence within ~1s.
-4. Closing the tab or leaving the match clears the presence.
+1. Start the daemon: `bin/faceit-rpc.exe` (logs to `cs2rpc.log` next to it).
+2. Install the extension for your browser.
+3. Open a FACEIT match room. Discord shows the live presence within ~1s.
+4. Closing the match tab or leaving the match clears the presence.
 
-## Payload (extension → daemon)
+## Configuration
 
-```json
-{
-  "status": "match" | "queue" | "idle",
-  "map": "Mirage" | null,
-  "elo": 1234 | null,
-  "score": { "team_a": 4, "team_b": 2 } | null,
-  "phase": "In Queue" | "Captains Pick" | null,
-  "match_start": 1700000000 | null,
-  "match_id": "abc-123" | null
-}
-```
+| Setting        | Default / env            | Notes                                  |
+|----------------|--------------------------|----------------------------------------|
+| App ID         | `1540354848015388685`    | set in `backend/main.go`               |
+| Port           | `42157` / `CS2RPC_PORT`  | daemon binds `127.0.0.1:<port>`        |
+| Discord assets | `cs2`, `faciet`          | uploaded in the Developer Portal       |
+| Nickname       | popup input              | stored in `chrome.storage.local`       |
 
-## Notes / caveats
+## Troubleshooting / notes
 
-- FACEIT DOM selectors are best-effort (`[data-testid]` anchors + heuristics). If the
-  score/map stops updating after a site redesign, adjust the selectors in `content.js`.
-- The daemon binds **only** `127.0.0.1` and rejects requests with a non-loopback `Host`
-  or a non-extension `Origin` (DNS-rebinding / cross-site protection).
-- Single-instance: double-launching the exe is ignored via a Windows named mutex.
+- **No presence?** Make sure the Discord desktop client is running and that you
+  uploaded the `cs2` and `faciet` assets in the Developer Portal.
+- **Score/map stops updating after a FACEIT site redesign?** The selectors in
+  `extensions/*/content.js` are best-effort; adjust them there.
+- **Firefox: "xpi not signed"?** Set `xpinstall.signatures.required=false` in
+  `about:config` (or sign via AMO). This is only needed for the packaged `.xpi`;
+  Chromium's Load unpacked needs no signing.
+- The daemon rejects any request whose `Host` is not loopback or whose `Origin`
+  is not the extension (DNS-rebinding / cross-site protection).
+- Single-instance: launching the exe twice is ignored via a Windows named mutex.
+
+## Disclaimer
+
+This project does not interact with the FACEIT client or game process in any
+way. It only reads the public FACEIT web page DOM in your browser and talks to
+Discord. Use at your own risk.

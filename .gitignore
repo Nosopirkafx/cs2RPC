@@ -1,7 +1,9 @@
 # Build artifacts
 /bin/
+/dist/
 *.exe
 *.log
+*.xpi
 
 # OS / editor
 .DS_Store
