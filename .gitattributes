@@ -1,10 +1,2 @@
-# Явно указываем исходники Go (включая подпакеты, напр. backend/rpc)
-backend/**/*.go linguist-detectable=true linguist-documentation=false
-
-# Явно указываем скрипты расширений
-extensions/**/*.js linguist-detectable=true linguist-documentation=false
-
-# Исключаем файлы сборки и документацию из подсчета языков
-*.md linguist-documentation=true
-install/*.bat linguist-documentation=true
-Makefile linguist-documentation=true
+*.go linguist-language=Go
+*.js linguist-language=JavaScript
