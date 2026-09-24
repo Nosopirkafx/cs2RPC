@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +11,11 @@ import (
 )
 
 const (
+	consoleArt = `          ___  ___  ___  _____
+ _______ |_  |/ _ \/ _ \/ ___/
+/ __(_-</ __// , _/ ___/ /__
+\__/___/____/_/|_/_/   \___/`
+
 	consoleOrange = "\x1b[38;5;208m"
 	consoleWhite  = "\x1b[97m"
 	consoleGreen  = "\x1b[38;5;82m"
@@ -271,27 +274,4 @@ func truncateText(value string, width int) string {
 	return string(runes[:max(0, width-1)]) + "…"
 }
 
-func loadArt() []string {
-	paths := make([]string, 0, 4)
-	if exe, err := os.Executable(); err == nil {
-		dir := filepath.Dir(exe)
-		paths = append(paths, filepath.Join(dir, "art.txt"), filepath.Join(filepath.Dir(dir), "art.txt"))
-	}
-	if cwd, err := os.Getwd(); err == nil {
-		paths = append(paths, filepath.Join(cwd, "art.txt"), filepath.Join(filepath.Dir(cwd), "art.txt"))
-	}
-	for _, path := range paths {
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		lines := strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n")
-		for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
-			lines = lines[:len(lines)-1]
-		}
-		if len(lines) > 0 {
-			return lines
-		}
-	}
-	return []string{"FACEIT DISCORD RPC"}
-}
+func defaultArt() []string { return strings.Split(consoleArt, "\n") }

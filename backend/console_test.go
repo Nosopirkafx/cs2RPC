@@ -16,7 +16,7 @@ func TestConsoleDashboardShowsLogoAndMatchData(t *testing.T) {
 	phase := "LIVE"
 	teamScore := &rpc.Score{A: 13, B: 9}
 	matchStart := time.Now().Add(-time.Minute).Unix()
-	ui := newConsoleUI(&out, []string{"CUSTOM ASCII ART"}, false, 90)
+	ui := newConsoleUI(&out, defaultArt(), false, 90)
 	ui.SetDiscordStatus("CONNECTED")
 	ui.SetMatchState(rpc.State{
 		Status:     "match",
@@ -28,7 +28,7 @@ func TestConsoleDashboardShowsLogoAndMatchData(t *testing.T) {
 	}, time.Now())
 
 	for _, expected := range []string{
-		"CUSTOM ASCII ART",
+		"___  ___  ___  _____",
 		"LIVE FACEIT DATA",
 		"CONNECTED",
 		"LIVE MATCH",

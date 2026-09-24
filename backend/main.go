@@ -25,7 +25,7 @@ func main() {
 	}
 
 	setupLogging()
-	ui := newConsoleUI(os.Stdout, loadArt(), enableConsoleColors(), consoleWidth())
+	ui := newConsoleUI(os.Stdout, defaultArt(), enableConsoleColors(), consoleWidth())
 	ui.Start()
 
 	if alreadyRunning() {

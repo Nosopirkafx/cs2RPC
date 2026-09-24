@@ -132,7 +132,6 @@ The daemon writes `cs2rpc.log` beside `faceit-rpc.exe` and also prints messages 
 .
 ├── .gitattributes                  GitHub language labels
 ├── .gitignore                      Ignores generated builds and local logs
-├── art.txt                         ASCII logo shown in the console dashboard
 ├── LICENSE                         Project license
 ├── Makefile                        Build shortcuts for developers
 ├── README.md                       User guide in English and Russian
