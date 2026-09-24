@@ -35,9 +35,9 @@ func (s *State) ToActivity() discordrpc.Activity {
 	}
 
 	act := discordrpc.Activity{
-		Name:  "FACEIT",
+		Name:    "FACEIT",
 		Details: details,
-		State: state,
+		State:   state,
 		Assets: &discordrpc.Assets{
 			LargeImage: largeImageKey,
 			LargeText:  largeImageText,
@@ -59,16 +59,26 @@ func (s *State) ToActivity() discordrpc.Activity {
 func Run(clientID string, in <-chan State) {
 	var handler *discordrpc.Client
 	var last discordrpc.Activity
+	connectionWarningShown := false
 
 	for {
 		if handler == nil {
 			h, err := discordrpc.New(clientID)
 			if err != nil {
-				log.Printf("discord login failed (is discord running?): %v", err)
-				time.Sleep(2 * time.Second)
+				if !connectionWarningShown {
+					log.Printf("Discord is not connected yet; start Discord desktop to enable Rich Presence: %v", err)
+					connectionWarningShown = true
+				}
+				time.Sleep(5 * time.Second)
 				continue
 			}
 			handler = h
+			if connectionWarningShown {
+				log.Println("Discord RPC connection restored")
+				connectionWarningShown = false
+			} else {
+				log.Println("Connected to Discord RPC")
+			}
 			if last.Name != "" {
 				if err := handler.SetActivity(last); err != nil {
 					log.Printf("restore activity failed: %v", err)

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -36,7 +37,6 @@ func main() {
 
 	store := &stateStore{}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", dashboardHandler)
 	mux.HandleFunc("/api/state", makeStateHandler(stateCh, store))
 	mux.HandleFunc("/api/status", store.statusHandler)
 
@@ -51,18 +51,8 @@ func main() {
 	}
 	shutdown := func() {
 		log.Println("shutting down")
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		_ = srv.Shutdown(ctx)
+		_ = srv.Close()
 	}
-	mux.HandleFunc("/api/stop", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost || !validHost(r) {
-			http.Error(w, "not found", http.StatusNotFound)
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
-		go shutdown()
-	})
 
 	go func() {
 		sig := make(chan os.Signal, 1)
@@ -71,7 +61,8 @@ func main() {
 		shutdown()
 	}()
 
-	log.Printf("listening on %s", addr)
+	log.Printf("FACEIT Discord RPC started on %s", addr)
+	log.Println("Waiting for a FACEIT page. Press Ctrl+C to exit.")
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server error: %v", err)
 	}
@@ -88,6 +79,8 @@ func (s *stateStore) set(state rpc.State) {
 	s.state = state
 	s.seen = time.Now()
 	s.mu.Unlock()
+
+	log.Printf("FACEIT: %s", describeState(state))
 }
 
 func (s *stateStore) statusHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,14 +89,52 @@ func (s *stateStore) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.mu.RLock()
+	connected := !s.seen.IsZero() && time.Since(s.seen) < 30*time.Second
+	state := s.state
+	if !connected {
+		state = rpc.State{Status: "idle"}
+	}
 	response := struct {
-		Running bool      `json:"running"`
-		Seen    time.Time `json:"seen,omitempty"`
-		State   rpc.State `json:"state"`
-	}{Running: !s.seen.IsZero(), Seen: s.seen, State: s.state}
+		Connected bool      `json:"connected"`
+		Seen      time.Time `json:"seen,omitempty"`
+		State     rpc.State `json:"state"`
+	}{Connected: connected, Seen: s.seen, State: state}
 	s.mu.RUnlock()
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if origin := r.Header.Get("Origin"); origin != "" && validOrigin(r) {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Vary", "Origin")
+	} else if origin != "" {
+		http.Error(w, "bad origin", http.StatusForbidden)
+		return
+	}
 	_ = json.NewEncoder(w).Encode(response)
+}
+
+func describeState(state rpc.State) string {
+	if state.Status == "idle" {
+		return "No active FACEIT match"
+	}
+	if state.Status == "queue" {
+		return "Searching for a match"
+	}
+	parts := make([]string, 0, 4)
+	if state.Map != nil && *state.Map != "" {
+		parts = append(parts, "Map: "+*state.Map)
+	}
+	if state.Elo != nil {
+		parts = append(parts, fmt.Sprintf("ELO: %d", *state.Elo))
+	}
+	if state.Score != nil {
+		parts = append(parts, fmt.Sprintf("Score: %d : %d", state.Score.A, state.Score.B))
+	}
+	if state.Phase != nil && *state.Phase != "" {
+		parts = append(parts, "Phase: "+*state.Phase)
+	}
+	if len(parts) == 0 {
+		return "Match detected; waiting for match data"
+	}
+	return strings.Join(parts, " | ")
 }
 
 func makeStateHandler(stateCh chan rpc.State, store *stateStore) http.HandlerFunc {
@@ -184,5 +215,5 @@ func setupLogging() {
 	if err != nil {
 		return
 	}
-	log.SetOutput(f)
+	log.SetOutput(io.MultiWriter(os.Stdout, f))
 }

@@ -168,6 +168,7 @@
   }, 15000);
 
   window.addEventListener("beforeunload", () => {
-    sendState({ status: "idle" });
+    lastState = { status: "idle" };
+    sendState(lastState);
   });
 })();

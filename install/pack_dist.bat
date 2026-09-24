@@ -5,7 +5,7 @@ setlocal
 echo [1/3] Building daemon (bin/faceit-rpc.exe)...
 if not exist bin mkdir bin
 cd backend
-go build -ldflags="-s -w -H=windowsgui" -trimpath -o ..\bin\faceit-rpc.exe .
+go build -ldflags="-s -w" -trimpath -o ..\bin\faceit-rpc.exe .
 if errorlevel 1 (echo Build FAILED & exit /b 1)
 cd ..
 echo [2/3] Building .xpi...

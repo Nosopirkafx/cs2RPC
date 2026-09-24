@@ -4,7 +4,7 @@ BINARY := bin/faceit-rpc.exe
 
 build:
 	mkdir -p bin
-	cd backend && GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -H=windowsgui" -trimpath -o ../$(BINARY) .
+	cd backend && GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o ../$(BINARY) .
 
 xpi:
 	cmd /c install\pack_firefox.bat

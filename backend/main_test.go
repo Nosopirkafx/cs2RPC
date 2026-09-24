@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"faceit-discord-rpc/backend/rpc"
 )
@@ -30,17 +31,42 @@ func TestStateHandlerStoresNewestState(t *testing.T) {
 
 	statusReq := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:42157/api/status", nil)
 	statusReq.Host = "127.0.0.1:42157"
+	statusReq.Header.Set("Origin", "chrome-extension://example")
 	statusRes := httptest.NewRecorder()
 	store.statusHandler(statusRes, statusReq)
 	var response struct {
-		Running bool      `json:"running"`
-		State   rpc.State `json:"state"`
+		Connected bool      `json:"connected"`
+		State     rpc.State `json:"state"`
 	}
 	if err := json.NewDecoder(statusRes.Body).Decode(&response); err != nil {
 		t.Fatal(err)
 	}
-	if !response.Running || response.State.Status != "queue" {
+	if !response.Connected || response.State.Status != "queue" {
 		t.Fatalf("unexpected status response: %+v", response)
+	}
+	if got := statusRes.Header().Get("Access-Control-Allow-Origin"); got != "chrome-extension://example" {
+		t.Fatalf("allowed origin = %q, want extension origin", got)
+	}
+}
+
+func TestStatusHandlerExpiresStaleMatch(t *testing.T) {
+	store := &stateStore{
+		state: rpc.State{Status: "match"},
+		seen:  time.Now().Add(-31 * time.Second),
+	}
+	req := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:42157/api/status", nil)
+	req.Host = "127.0.0.1:42157"
+	res := httptest.NewRecorder()
+	store.statusHandler(res, req)
+	var response struct {
+		Connected bool      `json:"connected"`
+		State     rpc.State `json:"state"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		t.Fatal(err)
+	}
+	if response.Connected || response.State.Status != "idle" {
+		t.Fatalf("stale match should be inactive: %+v", response)
 	}
 }
 

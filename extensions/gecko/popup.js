@@ -7,7 +7,7 @@ const statusEl = document.getElementById("status");
 const matchEl = document.getElementById("match");
 
 function renderState(s) {
-  if (!s || s.status === "idle" || (!s.map && !s.elo && !s.score && !s.phase)) {
+  if (!s || s.status === "idle") {
     matchEl.innerHTML = '<div class="empty">No active match detected</div>';
     return;
   }
@@ -21,10 +21,10 @@ function renderState(s) {
   matchEl.innerHTML = html;
 }
 
-chrome.storage.local.get(["nickname", "lastState"], (r) => {
+chrome.storage.local.get("nickname", (r) => {
   if (r.nickname) nickInput.value = r.nickname;
-  renderState(r.lastState);
 });
+renderState(null);
 
 saveBtn.addEventListener("click", () => {
   const v = nickInput.value.trim();
@@ -33,24 +33,19 @@ saveBtn.addEventListener("click", () => {
   });
 });
 
-chrome.storage.onChanged.addListener((c) => {
-  if (c.lastState) renderState(c.lastState.newValue);
-});
-
 function checkDaemon() {
-  fetch(`http://127.0.0.1:${PORT}/api/state`, { method: "GET" })
-    .then((res) => {
-      if (res.ok) {
-        statusEl.textContent = "Connected";
-        statusEl.className = "pill ok";
-      } else {
-        statusEl.textContent = "Error";
-        statusEl.className = "pill bad";
-      }
+  fetch(`http://127.0.0.1:${PORT}/api/status`, { method: "GET", cache: "no-store" })
+    .then(async (res) => {
+      if (!res.ok) throw new Error("daemon unavailable");
+      const data = await res.json();
+      statusEl.textContent = "Connected";
+      statusEl.className = "pill ok";
+      renderState(data.connected ? data.state : null);
     })
     .catch(() => {
       statusEl.textContent = "Offline";
       statusEl.className = "pill bad";
+      renderState(null);
     });
 }
 
