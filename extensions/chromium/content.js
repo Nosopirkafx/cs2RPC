@@ -1,6 +1,4 @@
 (() => {
-  const PORT = 42157;
-
   let myNick = "";
   chrome.storage.local.get("nickname", (r) => { myNick = (r.nickname || "").trim(); });
   chrome.storage.onChanged.addListener((c) => {
@@ -17,17 +15,6 @@
     } catch (e) {
       // extension context temporarily unavailable; ignore
     }
-  }
-
-  function pick(selectors) {
-    for (const sel of selectors) {
-      const el = document.querySelector(sel);
-      if (el) {
-        const t = el.textContent.trim();
-        if (t) return t;
-      }
-    }
-    return null;
   }
 
   function findMap() {
@@ -159,7 +146,21 @@
     }
   }
 
-  setInterval(tick, 1000);
+  let tickTimer = null;
+  let lastTickAt = 0;
+  function scheduleTick() {
+    if (tickTimer !== null) return;
+    const wait = Math.max(350, 1000 - (Date.now() - lastTickAt));
+    tickTimer = setTimeout(() => {
+      tickTimer = null;
+      lastTickAt = Date.now();
+      tick();
+    }, wait);
+  }
+
+  const observer = new MutationObserver(scheduleTick);
+  observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  setInterval(scheduleTick, 5000);
   tick();
 
   setInterval(() => {

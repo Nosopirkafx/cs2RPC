@@ -1,4 +1,4 @@
-:: Launch the FACEIT Discord RPC daemon (keep this window open)
+:: Launch FACEIT Discord RPC and open its local control page.
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
@@ -12,7 +12,6 @@ if exist "%~dp0faceit-rpc.exe" (
   pause
   exit /b 1
 )
-echo Starting FACEIT Discord RPC daemon...
-echo Keep this window open while playing FACEIT.
-echo.
-"%EXE%"
+start "FACEIT Discord RPC" /b "%EXE%"
+timeout /t 1 /nobreak >nul
+start "" "http://127.0.0.1:42157/"
