@@ -132,6 +132,7 @@ The daemon writes `cs2rpc.log` beside `faceit-rpc.exe` and also prints messages 
 .
 ├── .gitattributes                  GitHub language labels
 ├── .gitignore                      Ignores generated builds and local logs
+├── art.txt                         ASCII logo shown in the console dashboard
 ├── LICENSE                         Project license
 ├── Makefile                        Build shortcuts for developers
 ├── README.md                       User guide in English and Russian
@@ -139,8 +140,12 @@ The daemon writes `cs2rpc.log` beside `faceit-rpc.exe` and also prints messages 
 ├── backend/
 │   ├── go.mod                      Go module and dependency versions
 │   ├── go.sum                      Checksums for Go dependencies
-│   ├── main.go                     Local HTTP server, state API, console and logging
+│   ├── main.go                     Local HTTP server, state API and logging
+│   ├── console.go                  Centered, colored live match dashboard
+│   ├── console_windows.go          Windows console color and width support
+│   ├── console_other.go            Console fallback for non-Windows builds
 │   ├── main_test.go                Tests for API state and origin validation
+│   ├── console_test.go              Tests for logo and match data in the CLI
 │   ├── mutex_windows.go            Prevents two daemon instances on Windows
 │   ├── mutex_other.go              No-op mutex implementation for other systems
 │   └── rpc/

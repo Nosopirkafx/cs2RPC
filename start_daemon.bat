@@ -1,6 +1,8 @@
 :: Start FACEIT Discord RPC in this console window.
 @echo off
 chcp 65001 >nul
+title FACEIT Discord RPC
+mode con cols=90 lines=34
 cd /d "%~dp0"
 if exist "%~dp0faceit-rpc.exe" (
   set "EXE=%~dp0faceit-rpc.exe"

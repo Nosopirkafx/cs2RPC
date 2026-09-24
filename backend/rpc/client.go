@@ -56,7 +56,7 @@ func (s *State) ToActivity() discordrpc.Activity {
 	return act
 }
 
-func Run(clientID string, in <-chan State) {
+func Run(clientID string, in <-chan State, onStatus func(string)) {
 	var handler *discordrpc.Client
 	var last discordrpc.Activity
 	connectionWarningShown := false
@@ -67,6 +67,9 @@ func Run(clientID string, in <-chan State) {
 			if err != nil {
 				if !connectionWarningShown {
 					log.Printf("Discord is not connected yet; start Discord desktop to enable Rich Presence: %v", err)
+					if onStatus != nil {
+						onStatus("DISCORD NOT RUNNING")
+					}
 					connectionWarningShown = true
 				}
 				time.Sleep(5 * time.Second)
@@ -75,13 +78,22 @@ func Run(clientID string, in <-chan State) {
 			handler = h
 			if connectionWarningShown {
 				log.Println("Discord RPC connection restored")
+				if onStatus != nil {
+					onStatus("CONNECTED")
+				}
 				connectionWarningShown = false
 			} else {
 				log.Println("Connected to Discord RPC")
+				if onStatus != nil {
+					onStatus("CONNECTED")
+				}
 			}
 			if last.Name != "" {
 				if err := handler.SetActivity(last); err != nil {
 					log.Printf("restore activity failed: %v", err)
+					if onStatus != nil {
+						onStatus("CONNECTION LOST — RECONNECTING")
+					}
 					handler = nil
 					continue
 				}
@@ -93,6 +105,9 @@ func Run(clientID string, in <-chan State) {
 			if s.Status == "idle" {
 				if err := handler.SetActivity(discordrpc.Activity{Name: "FACEIT"}); err != nil {
 					log.Printf("clear activity failed: %v", err)
+					if onStatus != nil {
+						onStatus("CONNECTION LOST — RECONNECTING")
+					}
 					handler = nil
 					continue
 				}
@@ -102,6 +117,9 @@ func Run(clientID string, in <-chan State) {
 			a := s.ToActivity()
 			if err := handler.SetActivity(a); err != nil {
 				log.Printf("set activity failed: %v", err)
+				if onStatus != nil {
+					onStatus("CONNECTION LOST — RECONNECTING")
+				}
 				handler = nil
 				continue
 			}
@@ -110,6 +128,9 @@ func Run(clientID string, in <-chan State) {
 			if last.Name != "" {
 				if err := handler.SetActivity(last); err != nil {
 					log.Printf("discord pipe lost, reconnecting: %v", err)
+					if onStatus != nil {
+						onStatus("CONNECTION LOST — RECONNECTING")
+					}
 					handler = nil
 				}
 			}

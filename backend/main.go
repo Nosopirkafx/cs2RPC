@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -26,16 +25,18 @@ func main() {
 	}
 
 	setupLogging()
+	ui := newConsoleUI(os.Stdout, loadArt(), enableConsoleColors(), consoleWidth())
+	ui.Start()
 
 	if alreadyRunning() {
-		log.Println("another instance is already running, exiting")
+		ui.SetDaemonStatus("ALREADY RUNNING")
 		return
 	}
 
 	stateCh := make(chan rpc.State, 1)
-	go rpc.Run(clientID, stateCh)
+	go rpc.Run(clientID, stateCh, ui.SetDiscordStatus)
 
-	store := &stateStore{}
+	store := &stateStore{onState: ui.SetMatchState}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/state", makeStateHandler(stateCh, store))
 	mux.HandleFunc("/api/status", store.statusHandler)
@@ -50,6 +51,7 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 	}
 	shutdown := func() {
+		ui.SetDaemonStatus("STOPPING")
 		log.Println("shutting down")
 		_ = srv.Close()
 	}
@@ -61,26 +63,29 @@ func main() {
 		shutdown()
 	}()
 
-	log.Printf("FACEIT Discord RPC started on %s", addr)
-	log.Println("Waiting for a FACEIT page. Press Ctrl+C to exit.")
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		ui.SetDaemonStatus("SERVER ERROR")
 		log.Fatalf("server error: %v", err)
 	}
 }
 
 type stateStore struct {
-	mu    sync.RWMutex
-	state rpc.State
-	seen  time.Time
+	mu      sync.RWMutex
+	state   rpc.State
+	seen    time.Time
+	onState func(rpc.State, time.Time)
 }
 
 func (s *stateStore) set(state rpc.State) {
+	seen := time.Now()
 	s.mu.Lock()
 	s.state = state
-	s.seen = time.Now()
+	s.seen = seen
+	onState := s.onState
 	s.mu.Unlock()
-
-	log.Printf("FACEIT: %s", describeState(state))
+	if onState != nil {
+		onState(state, seen)
+	}
 }
 
 func (s *stateStore) statusHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,32 +114,6 @@ func (s *stateStore) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(w).Encode(response)
-}
-
-func describeState(state rpc.State) string {
-	if state.Status == "idle" {
-		return "No active FACEIT match"
-	}
-	if state.Status == "queue" {
-		return "Searching for a match"
-	}
-	parts := make([]string, 0, 4)
-	if state.Map != nil && *state.Map != "" {
-		parts = append(parts, "Map: "+*state.Map)
-	}
-	if state.Elo != nil {
-		parts = append(parts, fmt.Sprintf("ELO: %d", *state.Elo))
-	}
-	if state.Score != nil {
-		parts = append(parts, fmt.Sprintf("Score: %d : %d", state.Score.A, state.Score.B))
-	}
-	if state.Phase != nil && *state.Phase != "" {
-		parts = append(parts, "Phase: "+*state.Phase)
-	}
-	if len(parts) == 0 {
-		return "Match detected; waiting for match data"
-	}
-	return strings.Join(parts, " | ")
 }
 
 func makeStateHandler(stateCh chan rpc.State, store *stateStore) http.HandlerFunc {
@@ -206,6 +185,7 @@ func validOrigin(r *http.Request) bool {
 }
 
 func setupLogging() {
+	log.SetOutput(io.Discard)
 	exe, err := os.Executable()
 	if err != nil {
 		return
@@ -215,5 +195,5 @@ func setupLogging() {
 	if err != nil {
 		return
 	}
-	log.SetOutput(io.MultiWriter(os.Stdout, f))
+	log.SetOutput(f)
 }
